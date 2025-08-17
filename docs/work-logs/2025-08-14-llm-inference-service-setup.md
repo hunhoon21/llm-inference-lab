@@ -48,23 +48,41 @@ gcloud compute project-info describe --project=$PROJECT_ID
 #### 💡 GPU 할당량 승인 팁
 ```
 승인 과정:
-- 일반적으로 24-48시간 소요
-- 신규 계정의 경우 더 오래 걸릴 수 있음
-- 요청 사유에 "머신러닝 연구/개발" 명시
-- 예상 사용 시간과 목적 구체적으로 기술
+- 적절한 사유 작성 시 1-5분 내 즉시 승인 가능
+- 신규 계정도 구체적 사유 작성하면 빠른 승인
+- 요청 사유는 영문으로 구체적이고 전문적으로 작성
+- 연구/개발 목적과 예상 사용량 명시
 ```
+
+**🏆 승인 받은 사유 메시지 예시 (1분 내 승인):**
+```
+We are requesting additional GPU quota (NVIDIA L4) to support our Large Language Model (LLM) research and development.
+The GPU resources will be used for model inference, benchmarking, and fine-tuning experiments in a controlled environment.
+This is part of our ongoing R&D project to evaluate performance and scalability of LLMs on Google Cloud infrastructure.
+```
+
+**✅ 빠른 승인을 위한 핵심 요소:**
+- 구체적인 기술 용도 명시 (LLM, inference, benchmarking)
+- 연구개발 목적 강조
+- 전문적이고 명확한 영문 작성
+- GCP 인프라 활용 의지 표현
 
 ### 2. Deep Learning VM 이미지 확인
 ```bash
 # 사용 가능한 Deep Learning VM 이미지 조회
 gcloud compute images list \
     --project=deeplearning-platform-release \
-    --filter="family:pytorch-latest-gpu" \
-    --limit=5
+    --filter="family:pytorch*" \
+    --limit=10
 
-# PyTorch + CUDA가 사전 설치된 이미지 선택
-IMAGE_FAMILY="pytorch-latest-gpu"
+# 최신 PyTorch + CUDA가 사전 설치된 이미지 선택 (2025년 8월 기준)
+IMAGE_FAMILY="pytorch-2-7-cu128-ubuntu-2204-nvidia-570"
 IMAGE_PROJECT="deeplearning-platform-release"
+
+# 이미지 상세 정보 확인
+gcloud compute images describe \
+    --project=$IMAGE_PROJECT \
+    projects/$IMAGE_PROJECT/global/images/family/$IMAGE_FAMILY
 ```
 
 ### 3. GPU 인스턴스 생성
@@ -117,8 +135,8 @@ gcloud compute firewall-rules create allow-llm-monitoring \
 
 ### 1. 인스턴스 접속 및 환경 확인
 ```bash
-# GPU 인스턴스에 SSH 접속
-gcloud compute ssh llm-inference-server --zone=us-central1-a
+# GPU 인스턴스에 SSH 접속 (앞서 생성한 SSH 키 사용)
+gcloud compute ssh llm-inference-server --zone=us-central1-a --ssh-key-file ~/.ssh/gcp-key
 
 # GPU 확인
 nvidia-smi
